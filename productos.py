@@ -199,3 +199,125 @@ def obtener_productos_bd():
     conexion.close()
 
     return productos_bd
+
+# Crea un producto nuevo y lo guarda en la base de datos MySQL
+
+def obtener_producto_por_id(producto_id):
+    conexion = obtener_conexion()
+
+    if conexion is None:
+        return None
+
+    cursor = conexion.cursor(dictionary=True)
+
+    try:
+        consulta = """
+            SELECT id, nombre, precio, stock
+            FROM productos
+            WHERE id = %s
+        """
+
+        cursor.execute(consulta, (producto_id,))
+        producto = cursor.fetchone()
+
+        return producto
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+
+def crear_producto_bd(nombre, precio, stock):
+    conexion = obtener_conexion()
+
+    if conexion is None:
+        return None
+
+    cursor = conexion.cursor()
+
+    try:
+        consulta = """
+            INSERT INTO productos (nombre, precio, stock)
+            VALUES (%s, %s, %s)
+        """
+
+        valores = (nombre, precio, stock)
+
+        cursor.execute(consulta, valores)
+        conexion.commit()
+
+        producto_id = cursor.lastrowid
+
+        return {
+            "id": producto_id,
+            "nombre": nombre,
+            "precio": float(precio),
+            "stock": stock
+        }
+
+    except Error as error:
+        print(f"Error al crear producto: {error}")
+        return None
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+
+# Elimina de MySQL el producto que tenga el ID indicado.
+def eliminar_producto_bd(producto_id):
+    conexion = obtener_conexion()
+
+    if conexion is None:
+        return None
+
+    cursor = conexion.cursor()
+
+    try:
+        consulta = "DELETE FROM productos WHERE id = %s"
+
+        cursor.execute(consulta, (producto_id,))
+        conexion.commit()
+
+        return cursor.rowcount > 0
+
+    except Error as error:
+        print(f"Error al eliminar producto: {error}")
+        return None
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+
+# Actualiza el nombre, precio y stock de un producto en MySQL.
+def modificar_producto_bd(producto_id, nombre, precio, stock):
+    conexion = obtener_conexion()
+
+    if conexion is None:
+        return None
+
+    cursor = conexion.cursor()
+
+    try:
+        consulta = """
+            UPDATE productos
+            SET nombre = %s, precio = %s, stock = %s
+            WHERE id = %s
+        """
+
+        valores = (nombre, precio, stock, producto_id)
+
+        cursor.execute(consulta, valores)
+        conexion.commit()
+
+        return cursor.rowcount > 0
+
+    except Error as error:
+        print(f"Error al modificar producto: {error}")
+        return None
+
+    finally:
+        cursor.close()
+        conexion.close()
+
